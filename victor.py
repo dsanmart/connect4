@@ -4,7 +4,6 @@ import json
 import random
 import time
 
-
 class Game:
     def __init__(self, state, status, player):
         self.state = state
