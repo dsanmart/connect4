@@ -14,7 +14,7 @@ other_board = [
     [".", "O", ".", ".", ".", ".", "."], 
     [".", "O", ".", ".", ".", ".", "."]]
 
-#ee
+
 def square_to_groups(board,player):
     groups = []
     # first we need to find the possible groups in the board
