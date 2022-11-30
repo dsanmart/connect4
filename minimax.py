@@ -72,9 +72,13 @@ def fill_possible_actions(board, possible_actions, player):
 # ----------- MINIMAX ----------- #
 
 def heuristic(board, player):
-    if check_win(board, "X"):
+    if player == "X":
+        oppponent = "O"
+    else:
+        oppponent = "X"
+    if check_win(board, player):
         return 100
-    elif check_win(board, "O"):
+    elif check_win(board, oppponent):
         return -100
     else:
         return 0

@@ -151,13 +151,15 @@ def find_threats(board, player):
                             groups.append([(i,j),(i+1,j-1),(i+2,j-2),(i+3,j-3)])
     return groups
 
-def square_to_groups(board, player):
+def square_to_groups(board, player):    
     square_to_group={}
     threats = find_threats(board, player)
+    print(threats)
     for group in threats:
         for coord in group:
-            square_to_group[coord] = group
-
+            if coord not in square_to_group:
+                square_to_group[coord] = []
+            square_to_group[coord].append(group)
     return square_to_group
 
 
@@ -448,7 +450,7 @@ baseclaims = find_base_claims(test_diagram)
 befores = find_befores(test_diagram)
 special_befores = find_special_befores(test_diagram, befores)
 end = time.time()
-
+"""
 print("Seconds taken: ", end - start)
 print("Claimevens: ", claimevens)
 print("Baseinverses: ", baseinverses)
@@ -459,3 +461,5 @@ print("Afterevens: ", afterevens)
 print("Baseclaims: ", baseclaims)
 print("Befores: ", befores)
 print("Special_befores: ", special_befores)
+"""
+print(square_to_groups(test_diagram, "X"))
