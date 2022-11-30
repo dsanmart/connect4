@@ -14,7 +14,7 @@ other_board = [
     [".", "O", ".", ".", ".", ".", "."], 
     [".", "O", ".", ".", ".", ".", "."]]
 
-#ee
+
 def square_to_groups(board,player):
     groups = []
     # first we need to find the possible groups in the board
@@ -58,15 +58,18 @@ def square_to_groups(board,player):
     square_to_group={}
     for group in groups:
         for coord in group:
-            square_to_group[coord] = group
+            if coord not in square_to_group:
+                square_to_group[coord] = []
+            square_to_group[coord].append(group)
     print(square_to_group)
     return square_to_group
 
 
 square_to_groups=square_to_groups(initial_board,"X")
+#print(square_to_groups)
 
 # Convert each application of each rule into a Solution.
-solutions=set()
+solutions=[]
 group_to_solution={}
        
 #Claimeven
@@ -97,10 +100,10 @@ def from_claimeven(claimeven,square_to_groups):
 for claimeven in claimevens:
     solution=from_claimeven(claimeven,square_to_groups)
     if solution:
-        solutions.add(solution)
+        solutions.append(solution)
         if solution["groups"] not in group_to_solution:
-            group_to_solution[solution["groups"]]=set()
-        group_to_solution[solution["groups"]].add(solution)
+            group_to_solution[solution["groups"]]=[]
+        group_to_solution[solution["groups"]].append(solution)
     
 
 #BaseInverse
@@ -151,6 +154,7 @@ def find_baseinverses(board):
     Returns:
         List with all the tuples that contain both squares
     """
+    
     baseinverses = []
     playable_actions = possible_actions(board)
 
@@ -167,6 +171,11 @@ def find_baseinverses(board):
     return baseinverses
 
 baseinverses=find_baseinverses(initial_board)
+print("-------------------")
+print(baseinverses)
+def intersection(lst1, lst2):
+    lst3 = [value for value in lst1 if value in lst2]
+    return lst3
 
 def find_baseinverse_groups(baseinverses,square_to_groups):
     """Finds all the baseinverses on a board.
@@ -175,15 +184,18 @@ def find_baseinverse_groups(baseinverses,square_to_groups):
     
     Returns:
         List with all the tuples that contain both squares
+
     """
+
     for baseinverse in baseinverses:
         square1=baseinverse[0]
         square2=baseinverse[1]
-        groups1, groups2 = square_to_groups[square1], square_to_groups[square2]
-        groups_intersection = groups1.intersection(groups2)
-        if groups_intersection:
-            squares= frozenset([square1, square2])
-            return{"squares":squares,"groups":groups_intersection,"rule":"baseinverse"}
+        if square1 in square_to_groups and square2 in square_to_groups:
+            groups1, groups2 = square_to_groups[square1], square_to_groups[square2]
+            groups_intersection = intersection(groups1, groups2)
+            if groups_intersection:
+                squares= frozenset([square1, square2])
+                return{"squares":squares,"groups":groups_intersection,"rule":"baseinverse"}
 
 
 for baseinverse in baseinverses:
@@ -194,7 +206,8 @@ for baseinverse in baseinverses:
             group_to_solution[solution["groups"]]=set()
         group_to_solution[solution["groups"]].add(solution) #add solution to group_to_solution
 
-
+print("heey")
+print(find_baseinverse_groups(baseinverses,square_to_groups))
 
 #Vertical
 def find_verticals(board, player):
@@ -217,11 +230,12 @@ verticals=find_verticals(initial_board,"X")
 
 def from_vertical(vertical,square_to_groups):
     rule="vertical"
-    upper_groups=vertical[0] # vertical.upper
-    lower_groups=vertical[1] # vertical.lower
-    groups_intersection = upper_groups.intersection(lower_groups)
-    if groups_intersection:
-        return{"squares":vertical,"groups":groups_intersection,"rule":rule}
+    if vertical[0] in square_to_groups and vertical[1] in square_to_groups:
+        upper_groups=square_to_groups[vertical[0]] # vertical.upper
+        lower_groups=square_to_groups[vertical[1]] # vertical.lower
+        groups_intersection = intersection(upper_groups,lower_groups)
+        if groups_intersection:
+            return{"squares":vertical,"groups":groups_intersection,"rule":rule}
 
 for vertical in verticals:
     solution=from_vertical(vertical,square_to_groups)
