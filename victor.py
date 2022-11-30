@@ -112,6 +112,54 @@ def is_true_threat(threat):
         return True
     return False
 
+def find_threats(board, player):
+    groups = []
+    # first we need to find the possible groups in the board
+    
+    # Check for vertical
+    for i in range(3):
+        for j in range(7):
+            if board[i][j] == player or board[i][j]== ".":
+                if board[i+1][j] == player or board[i+1][j]== ".":
+                    if board[i+2][j] == player or board[i+2][j]== ".":
+                        if board[i+3][j] == player or board[i+3][j]== ".":
+                            groups.append([(i,j),(i+1,j),(i+2,j),(i+3,j)])
+    
+    # Check for horizontal
+    for i in range(6):
+        for j in range(4):
+            if board[i][j] == player or board[i][j]== ".":
+                if board[i][j+1] == player or board[i][j+1]== ".":
+                    if board[i][j+2] == player or board[i][j+2]== ".":
+                        if board[i][j+3] == player or board[i][j+3]== ".":
+                            groups.append([(i,j),(i,j+1),(i,j+2),(i,j+3)])
+
+    # Check for diagonal right
+    for i in range(3):
+        for j in range(4):
+            if board[i][j] == player or board[i][j]== ".":
+                if board[i+1][j+1] == player or board[i+1][j+1]== ".":
+                    if board[i+2][j+2] == player or board[i+2][j+2]== ".":
+                        if board[i+3][j+3] == player or board[i+3][j+3]== ".":
+                            groups.append([(i,j),(i+1,j+1),(i+2,j+2),(i+3,j+3)])
+    # Check for diagonal left
+    for i in range(3):
+        for j in range(3,7):
+            if board[i][j] == player or board[i][j]== ".":
+                if board[i+1][j-1] == player or board[i+1][j-1]== ".":
+                    if board[i+2][j-2] == player or board[i+2][j-2]== ".":
+                        if board[i+3][j-3] == player or board[i+3][j-3]== ".":
+                            groups.append([(i,j),(i+1,j-1),(i+2,j-2),(i+3,j-3)])
+    return groups
+
+def square_to_groups(board, player):
+    square_to_group={}
+    threats = find_threats(board, player)
+    for group in threats:
+        for coord in group:
+            square_to_group[coord] = group
+
+    return square_to_group
 
 
 # ----------- GAME RULES ----------- #
@@ -172,21 +220,6 @@ def find_verticals(board):
                 verticals.append((row, col))
     return verticals
 
-def find_after_evens():
-    """Finds all the after evens on a board.
-
-    Required: 
-        A group which can be completed by the controller of the Zugzwang, using only the even
-        squares of a set of Claimevens. This group is called the Aftereven group. 
-        The columns in which the empty squares lie are called the Aftereven columns.
-    
-    Returns:
-        TBD
-    """
-    afterevens = []
-    pass
-
-
 def find_low_inverses(verticals):
     """Finds all the low_inverses on a board. Returns all combinations made by 2 verticals that are possible threats.
     
@@ -240,6 +273,128 @@ def find_high_inverses(board):
                             high_inverses.append(((row_col1, col1), (row_col2, col2)))
     return high_inverses
 
+def find_after_evens(board, player="O"):
+    """Finds all the after evens on a board.
+    The controller of the Zugzwang (black) will always play claimeven to reach the et even group.
+    For this function to work, the game should comply with it's basic rules: first player must be "X" (white).
+
+    Required: 
+        A group which can be completed by the controller of the Zugzwang, using only the even
+        squares of a set of Claimevens. This group is called the Aftereven group. 
+        The columns in which the empty squares lie are called the Aftereven columns.
+    
+    Returns:
+        A list of all afterevens. Each afterevne is represented by a list of tuples with coords (row, col) for the 4 squares.
+    """
+    afterevens = []
+    for row in range(1, len(board), 2):
+        for col in range(len(board[0])-3):
+            if ((board[row][col] == '.' or board[row][col] == player) 
+            and (board[row][col+1] == '.' or board[row][col+1] == player) 
+            and (board[row][col+2] == '.' or board[row][col+2] == player) 
+            and (board[row][col+3] == '.' or board[row][col+3] == player)):
+                afterevens.append([(row, col), (row, col+1), (row, col+2), (row, col+3)])
+
+    return afterevens
+
+def find_base_claims(board):
+    """Returns the baseclaim of the board.
+
+    Required:
+        Three directly playable squares and the square above the second playable square.
+        The non-playable (fourth) square must be even.
+    
+    Returns:
+        List with all baseclaims. Each baseclaim group represented as (square1, square2, square3, square4)
+    """
+    baseclaims = []
+    playable_actions = possible_actions(board)
+
+    # Try all different combinations of directly playable squares.
+    for i in range(len(playable_actions)):
+        square1 = playable_actions[i]
+        for j in range(len(playable_actions[i+1:])):
+            square2 = playable_actions[j]
+            for square3 in playable_actions[j+1:]:
+                if square1 != square2 and square1 != square3 and square2 != square3:
+                    square4 = (square2[0]+1, square2[1])
+                    if square4[0]%2 == 1: # If in even row
+                        if is_true_threat((square1, square4)) and is_true_threat((square2, square3)):
+                            baseclaims.append((square1, square2, square3, square4))
+                        if is_true_threat((square3, square4)) and is_true_threat((square2, square1)):
+                            baseclaims.append((square3, square2, square1, square4))
+    return baseclaims
+
+# Helper function for find_befores
+def is_true_befores(board, threat):
+    for square in threat:
+        # If square is empty and in upper row
+        if board[square[0]][square[1]] == '.' and square[0] == 5: 
+            return False
+    return True
+
+def find_befores(board, player="X"):
+    """Returns all the befores on a board. These are combinations of claimevens and verticals.
+
+    Required:
+        A group without tokens from the opponent called before group.
+        All empty squares in the before group should not lie in the upper row of the board.
+
+    Returns:
+        List with all befores. Each before group represented as (square1, square2, square3, square4)
+    """
+    if player == "X":
+        opponent = "O"
+    else:
+        opponent = "X"
+    
+    opponent_threats = find_threats(board, opponent)
+
+    befores = []
+    for threat in opponent_threats:
+        # If vertical, skip it
+        if (threat[0][0] - threat[1][0]) != 0 and (threat[0][1] - threat[1][1]) == 0:
+            continue
+        if is_true_befores(board, threat):
+            befores.append(threat)
+    return befores
+
+# Helper function for special before
+def is_true_special_before(board, external_playable_square, before):
+    """Function to check requirements for a special before.
+        Directly playable square is not in the same column as any empty square of the Before.
+    """
+    for square in before:
+        if board[square[0]][square[1]] == ".": # If square is empty
+            if external_playable_square[1] == square[1]: # If in same column
+                return False
+    return True
+
+def find_special_befores(board, befores):
+    """Returns all the special befores on a board. This is a special version of the before.
+
+    Required:
+        A group without tokens from the opponent called Specialbefore group.
+        A directly playable square in another column.
+        All empty squares in the Specialbefore group should not lie in the upper row of the board.
+        One empty square of the Beforegroup must be playable.
+    
+    Returns:
+        List with all special befores. Each special before group represented as (directly playable square in another column, before_group)
+    """
+    external_playable_actions = possible_actions(board)
+    special_befores = []
+    for external_action in external_playable_actions:
+        for before_group in befores:
+            playable_squares_in_before_group = []
+            for square in before_group:
+                if (square in external_playable_actions) and (square not in special_befores):
+                    playable_squares_in_before_group.append(square)
+            if len(playable_squares_in_before_group) >= 1:
+                if is_true_special_before(board, external_action, before_group):
+                    special_befores.append((external_action, before_group))
+    return special_befores
+
 
 
 # ----------- TESTING ----------- #
@@ -260,7 +415,23 @@ diagram6_1 = board_flip([
     [".", ".", ".", "X", ".", ".", "."], 
     [".", ".", "X", "O", "O", ".", "."]])
 
-test_diagram = diagram6_1
+diagram6_5 = board_flip([
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", "X", "O", "O", "O", ".", "."], 
+    [".", "O", "X", "X", "X", ".", "."], 
+    ["O", "X", "X", "O", "O", ".", "."], 
+    ["O", "X", "X", "X", "O", ".", "."]])
+
+diagram6_10 = board_flip([
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", "O", ".", ".", ".", "."], 
+    [".", ".", "X", ".", ".", ".", "."], 
+    [".", ".", "O", ".", ".", ".", "."], 
+    [".", ".", "X", "O", ".", ".", "."], 
+    [".", ".", "X", "X", "O", ".", "."]])
+
+test_diagram = diagram6_10
 
 print("Board:")
 for row in board_flip(test_diagram):
@@ -273,6 +444,10 @@ baseinverses = find_baseinverses(test_diagram)
 verticals = find_verticals(test_diagram)
 low_inverses = find_low_inverses(verticals)
 high_inverses = find_high_inverses(test_diagram)
+afterevens = find_after_evens(test_diagram)
+baseclaims = find_base_claims(test_diagram)
+befores = find_befores(test_diagram)
+special_befores = find_special_befores(test_diagram, befores)
 end = time.time()
 
 print("Seconds taken: ", end - start)
@@ -281,3 +456,7 @@ print("Baseinverses: ", baseinverses)
 print("Verticals: ", verticals)
 print("Low_inverses: ", low_inverses)
 print("High_inverses: ", high_inverses)
+print("Afterevens: ", afterevens)
+print("Baseclaims: ", baseclaims)
+print("Befores: ", befores)
+print("Special_befores: ", special_befores)
