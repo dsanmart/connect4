@@ -168,7 +168,7 @@ def from_before(board, before, square_to_groups):
         for square in empty_square_successors[1:]:
             if square not in square_to_groups:
                 return None
-            threats = set(threats).intersection(set(square_to_groups[square]))
+            threats = set(threats).intersection(square_to_groups[square])
     else:
         return None
 
@@ -181,14 +181,15 @@ def from_before(board, before, square_to_groups):
             squares.append(vertical[1]) # Add lower square of vertical
             vertical_solution = from_vertical(vertical[1], square_to_groups)
             if vertical_solution:
-                threats.update(vertical_solution["groups"])
+                set(threats).update(vertical_solution["groups"])
         
         for claimeven in before["claimevens"]:
             squares.append(claimeven[0]) # Add upper square of claimeven
             squares.append(claimeven[1]) # Add lower square of claimeven
             claimeven_solution = from_claimeven(claimeven[1], square_to_groups)
             if claimeven_solution:
-                threats.update(claimeven_solution["groups"])
+                set(threats).update(claimeven_solution["groups"])
+
 
         return {"squares": squares, "groups": threats, "rule": "before"}
 
