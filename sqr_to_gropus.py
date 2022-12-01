@@ -1,3 +1,5 @@
+from copy import copy, deepcopy
+
 initial_board = [
     [".", ".", ".", ".", ".", ".", "."], 
     [".", ".", ".", ".", ".", ".", "."], 
@@ -26,7 +28,7 @@ def square_to_groups(board,player):
                 if board[i+1][j] == player or board[i+1][j]== ".":
                     if board[i+2][j] == player or board[i+2][j]== ".":
                         if board[i+3][j] == player or board[i+3][j]== ".":
-                            groups.append([(i,j),(i+1,j),(i+2,j),(i+3,j)])
+                            groups.append(tuple([(i,j),(i+1,j),(i+2,j),(i+3,j)]))
     
     # Check for horizontal
     for i in range(6):
@@ -35,7 +37,7 @@ def square_to_groups(board,player):
                 if board[i][j+1] == player or board[i][j+1]== ".":
                     if board[i][j+2] == player or board[i][j+2]== ".":
                         if board[i][j+3] == player or board[i][j+3]== ".":
-                            groups.append([(i,j),(i,j+1),(i,j+2),(i,j+3)])
+                            groups.append(tuple([(i,j),(i,j+1),(i,j+2),(i,j+3)]))
 
     # Check for diagonal right
     for i in range(3):
@@ -44,7 +46,7 @@ def square_to_groups(board,player):
                 if board[i+1][j+1] == player or board[i+1][j+1]== ".":
                     if board[i+2][j+2] == player or board[i+2][j+2]== ".":
                         if board[i+3][j+3] == player or board[i+3][j+3]== ".":
-                            groups.append([(i,j),(i+1,j+1),(i+2,j+2),(i+3,j+3)])
+                            groups.append(tuple([(i,j),(i+1,j+1),(i+2,j+2),(i+3,j+3)]))
     # Check for diagonal left
     for i in range(3):
         for j in range(3,7):
@@ -52,7 +54,7 @@ def square_to_groups(board,player):
                 if board[i+1][j-1] == player or board[i+1][j-1]== ".":
                     if board[i+2][j-2] == player or board[i+2][j-2]== ".":
                         if board[i+3][j-3] == player or board[i+3][j-3]== ".":
-                            groups.append([(i,j),(i+1,j-1),(i+2,j-2),(i+3,j-3)])
+                            groups.append(tuple([(i,j),(i+1,j-1),(i+2,j-2),(i+3,j-3)]))
     print(len(groups))
 
     square_to_group={}
@@ -61,7 +63,7 @@ def square_to_groups(board,player):
             if coord not in square_to_group:
                 square_to_group[coord] = []
             square_to_group[coord].append(group)
-    print(square_to_group)
+    print("s",square_to_group)
     return square_to_group
 
 
@@ -72,6 +74,13 @@ square_to_groups=square_to_groups(initial_board,"X")
 solutions=[]
 group_to_solution={}
        
+def board_flip(board):
+    """Returns a new board with the board flipped vertically.
+    This allows accessing the lower row as the first item in the list."""
+
+    new_board = deepcopy(board)
+    new_board.reverse()
+    return new_board
 #Claimeven
 def find_claimevens(board):
     """Finds all the claimable evens on a board. Can be used to determine a winner or draw.
@@ -89,22 +98,31 @@ def find_claimevens(board):
                 claimevens.append((row, col))
 
     return claimevens
-claimevens=find_claimevens(initial_board)
+claimevens=find_claimevens(board_flip(initial_board))
+print("claimevenes list",claimevens)
 
 def from_claimeven(claimeven,square_to_groups):
+    '''Arguments: claimeven, square_to_groups
+    Returns:
+    -Squares: upper an lower square
+    -Groups: groups that contain the upper and lower square
+    - Rules: rules that apply to the groups'''
+
     rule="claimeven"
-    groups= claimeven[0] # claimeven.upper
+    groups= square_to_groups[claimeven] 
     if groups:
-        return{"squares":claimeven,"groups":groups,"rule":rule}
+        return{"squares":[claimeven,(claimeven[0]-1, claimeven[1])],"groups": groups,"rule":rule} #output
     
 for claimeven in claimevens:
-    solution=from_claimeven(claimeven,square_to_groups)
+    solution=from_claimeven(claimeven,square_to_groups)# get the solution for each claimeven
     if solution:
         solutions.append(solution)
-        if solution["groups"] not in group_to_solution:
-            group_to_solution[solution["groups"]]=[]
-        group_to_solution[solution["groups"]].append(solution)
-    
+        for group in solution["groups"]:
+            if group not in group_to_solution:# check if the group is already in the dictionary
+                group_to_solution[group]=[]
+            group_to_solution[group].append(solution) # group_to_solutons--> Dict: key=group, value={squares,groups,rule}
+print("-------------------")
+print("Claimeven",group_to_solution)
 
 #BaseInverse
 
@@ -172,12 +190,14 @@ def find_baseinverses(board):
 
 baseinverses=find_baseinverses(initial_board)
 print("-------------------")
-print(baseinverses)
+print("BaseInverses", board_flip(baseinverses))
+
+# intersection(list1,list2)--> returns the common elements of list1 and list2
 def intersection(lst1, lst2):
     lst3 = [value for value in lst1 if value in lst2]
-    return lst3
+    return tuple(lst3)
 
-def find_baseinverse_groups(baseinverses,square_to_groups):
+def from_baseinverse(baseinverses,square_to_groups):
     """Finds all the baseinverses on a board.
 
     Required: 2 directly playable squares.
@@ -194,20 +214,22 @@ def find_baseinverse_groups(baseinverses,square_to_groups):
             groups1, groups2 = square_to_groups[square1], square_to_groups[square2]
             groups_intersection = intersection(groups1, groups2)
             if groups_intersection:
-                squares= frozenset([square1, square2])
+                squares= (square1, square2)
                 return{"squares":squares,"groups":groups_intersection,"rule":"baseinverse"}
 
 
 for baseinverse in baseinverses:
-    solution=find_baseinverse_groups(baseinverse,square_to_groups)
+    solution=from_baseinverse(baseinverse,square_to_groups)#normally None
+    print("solution",solution)
     if solution:
-        solutions.add(solution)
+        solutions.append(solution)
         if solution["groups"] not in group_to_solution:
-            group_to_solution[solution["groups"]]=set()
-        group_to_solution[solution["groups"]].add(solution) #add solution to group_to_solution
+            group_to_solution[solution["groups"]]=[]
+        group_to_solution[solution["groups"]].append(solution) #add solution to group_to_solution
 
-print("heey")
-print(find_baseinverse_groups(baseinverses,square_to_groups))
+print("-------------------")
+from_baseinverse(baseinverses,square_to_groups)
+print("BaseInverse",group_to_solution)
 
 #Vertical
 def find_verticals(board, player):
@@ -227,12 +249,17 @@ def find_verticals(board, player):
     return verticals
 
 verticals=find_verticals(initial_board,"X")
+print("-------------------")
+print("Verticals", board_flip(verticals))
 
 def from_vertical(vertical,square_to_groups):
+    '''Args: vertial: tuple with the coordinates of the lower square
+    square_to_groups: dictionary with the groups of each square
+    Returns: dictionary with the solution '''
     rule="vertical"
-    if vertical[0] in square_to_groups and vertical[1] in square_to_groups:
-        upper_groups=square_to_groups[vertical[0]] # vertical.upper
-        lower_groups=square_to_groups[vertical[1]] # vertical.lower
+    if vertical in square_to_groups and (vertical[0]+1,vertical[1]) in square_to_groups:
+        upper_groups=square_to_groups[vertical] # vertical.lower
+        lower_groups=square_to_groups[(vertical[0]+1,vertical[1])] # vertical.upper
         groups_intersection = intersection(upper_groups,lower_groups)
         if groups_intersection:
             return{"squares":vertical,"groups":groups_intersection,"rule":rule}
@@ -240,34 +267,16 @@ def from_vertical(vertical,square_to_groups):
 for vertical in verticals:
     solution=from_vertical(vertical,square_to_groups)
     if solution:
-        solutions.add(solution)
+        solutions.append(solution)
         if solution["groups"] not in group_to_solution:
-            group_to_solution[solution["groups"]]=set()
-        group_to_solution[solution["groups"]].add(solution)
+            group_to_solution[solution["groups"]]=[]
+        group_to_solution[solution["groups"]].append(solution)
 
-#Aftereven
-def find_after_evens(board, player="O"):
-    """Finds all the after evens on a board.
-    The controller of the Zugzwang (black) will always play claimeven to reach the et even group.
-    For this function to work, the game should comply with it's basic rules: first player must be "X" (white).
 
-    Required: 
-        A group which can be completed by the controller of the Zugzwang, using only the even
-        squares of a set of Claimevens. This group is called the Aftereven group. 
-        The columns in which the empty squares lie are called the Aftereven columns.
-    
-    Returns:
-        A list of all afterevens. Each afterevne is represented by a list of tuples with coords (row, col) for the 4 squares.
-    """
-    afterevens = []
-    for row in range(1, len(board), 2):
-        for col in range(len(board[0])-3):
-            if ((board[row][col] == '.' or board[row][col] == player) 
-            and (board[row][col+1] == '.' or board[row][col+1] == player) 
-            and (board[row][col+2] == '.' or board[row][col+2] == player) 
-            and (board[row][col+3] == '.' or board[row][col+3] == player)):
-                afterevens.append([(row, col), (row, col+1), (row, col+2), (row, col+3)])
+print("-------------------")
 
-    return afterevens
+print("Vertical",group_to_solution)
 
-afterevens=find_after_evens(initial_board,"X")
+#AfterEven
+
+
