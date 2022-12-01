@@ -107,3 +107,42 @@ def find_threats(board, player):
                         if board[i+3][j-3] == player or board[i+3][j-3]== ".":
                             groups.append(((i,j),(i+1,j-1),(i+2,j-2),(i+3,j-3)))
     return groups
+
+
+# ----------- HELPER FUNCTIONS FOR EVALUATION FUNCTION ----------- #
+def node_with_least_number_of_neighbors(node_graph, problems, disallowed_solutions):
+
+    most_difficult_node = None
+    num_neighbors_of_most_difficult = len(node_graph) + 1  # Set to an arbitrary high number.
+
+    # Find the Problem in problems with the fewest neighbors in node_graph.
+    # Only allowed_solutions are counted.
+    for problem in problems:
+        if problem in node_graph:
+            num_nodes = sum(1 for d in node_graph[problem] if d) - len(disallowed_solutions)
+            if num_nodes < num_neighbors_of_most_difficult:
+                most_difficult_node = problem
+                num_neighbors_of_most_difficult = num_nodes
+
+    # If we didn't find a most_difficult_node, then that means there isn't a single Problem in both
+    # problems and node_graph.
+    if most_difficult_node is not None:
+        return most_difficult_node
+
+    print("No problem in problems and node_graph")
+
+
+
+def cols_to_squares(squares):
+    """Converts an iterable of Squares into a dictionary of Squares keyed by the column they belong in.
+    Args:
+        squares (iterable<Square>): an iterable of Square objects.
+    Returns:
+        col_to_squares_dict (Map<int, Set<Square>>): a dictionary of columns to Squares in that column.
+    """
+    col_to_squares_dict = {}
+    for square in squares:
+        if square[1] not in col_to_squares_dict:
+            col_to_squares_dict[square[1]] = set()
+        col_to_squares_dict[square[1]].add(square)
+    return col_to_squares_dict
