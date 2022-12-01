@@ -308,6 +308,124 @@ def find_special_befores(board, befores):
 
 
 
+
+
+
+# ----------- WINNER RULES ----------- #
+def find_odd_threats(board):
+    playable_actions = possible_actions(board)
+    
+    odd_threats = []
+    for threat in find_threats(board, player="X"): 
+        # Find all empty square in the threat
+        empty_squares_of_threat = []
+        for square in threat:
+            if board[square[0]][square[1]] == ".":
+                empty_squares_of_threat.append(square)
+        
+        # If there is only 1 empty square in the group, the square is not directly playable, and it is an odd square:
+        if (len(empty_squares_of_threat) == 1 and
+             empty_squares_of_threat[0] not in playable_actions and 
+             empty_squares_of_threat[0][0] % 2 == 0): # If only left square in threat and is in odd row
+            empty_square = empty_squares_of_threat[0]
+            for square in playable_actions:
+                if square[1] == empty_square[1]: # If in same column
+                    playable_square = square
+
+            odd_threat = {"group": threat, "empty_odd_square": empty_square, "directly_playable": playable_square}
+            odd_threats.append(odd_threat)
+    return odd_threats
+
+
+# Helper function for threat combinations
+def create_threat_combination(even_threat, odd_threat, playable_actions):
+    """Returns a threat combination if it is valid. Otherwise returns None.
+    Returnned threat combination format:
+        {"even_threat": even_threat, 
+        "odd_threat": odd_threat, 
+        "shared_square": shared_square,
+        "even_squre": even_threat["even_square"],
+        "odd_square": odd_unshared_square,
+        "directly_playable_square_shared_col": directly_playable_square_shared_col,
+        "directly_playable_square_stacked_col": directly_playable_square_stacked_col, 
+        "threat_combination_type": threat_combination_type}
+    """
+    odd_unshared_square = None
+    if even_threat["odd_square"] == odd_threat["odd_square1"]:
+        odd_unshared_square = odd_threat["odd_square2"]
+    if even_threat["odd_square"] == odd_threat["odd_square2"]:
+        odd_unshared_square = odd_threat["odd_square1"]
+    
+    shared_square = even_threat["odd_square"]
+    if odd_unshared_square is None:
+        return None
+    if even_threat["even_square"][1] != odd_unshared_square[1]:
+        return None
+    # If the shared square is directly playable, return None.
+    if shared_square in playable_actions:
+        return None
+
+    if even_threat["even_square"][0] - odd_unshared_square[0] == 1:
+        threat_combination_type = "EvenAboveOdd"
+    elif even_threat["even_square"][0] - odd_unshared_square[0] == -1:
+        if even_threat["even_square"] in playable_actions:
+            threat_combination_type = "OddAboveDirectlyPlayableEven"
+        else:
+            threat_combination_type = "OddAboveNotDirectlyPlayableEven"
+    else:
+        return None
+
+    directly_playable_square_shared_col = None
+    directly_playable_square_stacked_col = None
+    for square in playable_actions:
+        if square[1] == even_threat["odd_square"][1]:
+            directly_playable_square_shared_col = square
+        if square[1] == odd_unshared_square[1]:
+            directly_playable_square_stacked_col = square
+
+    return {"even_threat": even_threat, 
+        "odd_threat": odd_threat, 
+        "shared_square": shared_square,
+        "even_squre": even_threat["even_square"],
+        "odd_square": odd_unshared_square,
+        "directly_playable_square_shared_col": directly_playable_square_shared_col,
+        "directly_playable_square_stacked_col": directly_playable_square_stacked_col, 
+        "threat_combination_type": threat_combination_type}
+
+def find_threat_combinations(board):
+    """Returns all the threat combinations for white if they exist. If there is multiple combinations, picks one at random.
+    """
+    white_threats = find_threats(board, player="X")
+
+    even_threats = []
+    odd_threats = []
+    for threat in white_threats:
+        empty_squares_of_threat = []
+        for square in threat:
+            if board[square[0]][square[1]] == ".":
+                empty_squares_of_threat.append(square)
+            
+        if len(empty_squares_of_threat) != 2:
+            continue
+            
+        square1, square2 = empty_squares_of_threat[0], empty_squares_of_threat[1]
+        if square1[0] % 2 == 0 and square2[0] % 2 == 0: # If odd threat
+            odd_threats.append({"threat": threat, "odd_square1": square1, "odd_square2": square2})
+        elif square1[0] % 2 == 1 and square2[0] % 2 == 0: # If even threat with square1 as the even square
+            even_threats.append({"threat": threat, "odd_square": square2, "even_square": square1})
+        elif square1[0] % 2 == 0 and square2[0] % 2 == 1: # If even threat with square1 as the odd square
+            even_threats.append({"threat": threat, "odd_square": square1, "even_square": square2})
+            
+    threat_combinations = []
+    playable_actions = possible_actions(board)
+    for even_threat in even_threats:
+        for odd_threat in odd_threats:
+            threat_combination = create_threat_combination(even_threat, odd_threat, playable_actions)
+
+
+    return threat_combinations
+
+
 # ----------- TESTING ----------- #
 
 initial_board = board_flip([
@@ -342,10 +460,32 @@ diagram6_10 = board_flip([
     [".", ".", "X", "O", ".", ".", "."], 
     [".", ".", "X", "X", "O", ".", "."]])
 
+diagram8_1 = board_flip([
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", ".", "O", "X", ".", "."], 
+    [".", "X", "X", "X", "O", ".", "."], 
+    [".", "X", "O", "O", "O", ".", "."], 
+    ["X", "O", "X", "X", "O", ".", "."]])
 
+diagram8_1 = board_flip([
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", ".", ".", ".", ".", "."], 
+    [".", ".", ".", "O", "X", ".", "."], 
+    [".", "X", "X", "X", "O", ".", "."], 
+    [".", "X", "O", "O", "O", ".", "."], 
+    ["X", "O", "X", "X", "O", ".", "."]])
+
+diagram8_3 = board_flip([
+    [".", ".", ".", "O", "O", ".", "."], 
+    [".", ".", ".", "X", "X", ".", "."], 
+    [".", ".", ".", "O", "O", ".", "."], 
+    [".", ".", ".", "X", "X", ".", "."], 
+    [".", ".", ".", "O", "X", ".", "."], 
+    [".", ".", ".", "X", "O", ".", "X"]])
 
 if __name__ == "__main__":
-    test_diagram = diagram6_10
+    test_diagram = diagram8_3
     player = "X"
     print("Board:")
     for row in board_flip(test_diagram):
@@ -363,6 +503,8 @@ if __name__ == "__main__":
     baseclaims = find_base_claims(test_diagram)
     befores = find_befores(test_diagram, player)
     special_befores = find_special_befores(test_diagram, befores)
+    odd_threats = find_odd_threats(test_diagram)
+    threat_combinations = find_threat_combinations(test_diagram)
     end = time.time()
 
 #    print("Seconds taken: ", end - start)
@@ -374,4 +516,6 @@ if __name__ == "__main__":
 #    print("Afterevens: ", afterevens)
 #    print("Baseclaims: ", baseclaims)
 #    print("Befores: ", befores)
-    print("Special_befores: ", special_befores)
+#    print("Special_befores: ", special_befores)
+    print("Odd_threats: ", odd_threats)
+    print("Threat_combinations: ", threat_combinations)

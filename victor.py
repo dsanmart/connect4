@@ -9,7 +9,7 @@ import time
 # ----------- IMPLEMENTATION ----------- #
 
 def find_all_solutions(board, player):
-    """Finds all solutions of the opponent on the board.
+    """Finds all solutions the opponent can employ on the board.
 
     Returns:
         List with all solutions. Each solution represented as {squares = [(row, col), ...], groups = [(square1, square2, square3, square4), ...], rule = "rule_name"}
@@ -19,9 +19,9 @@ def find_all_solutions(board, player):
     claimevens = find_claimevens(board)
     baseinverses = find_baseinverses(board)
     verticals = find_verticals(board)
+    afterevens = find_after_evens(board, player)
     low_inverses = find_low_inverses(verticals)
     high_inverses = find_high_inverses(board)
-    afterevens = find_after_evens(board, player)
     baseclaims = find_base_claims(board)
     befores = find_befores(board)
     special_befores = find_special_befores(board, befores)
@@ -194,6 +194,18 @@ def from_before(board, before, square_to_groups):
         return {"squares": squares, "groups": threats, "rule": "before"}
 
 
+def find_all_win_conditions(board):
+    """Returns all win conditions for the opponent can employ on the board.
+    Returns:
+        List of solutions that are win conditions.
+    """
+    oddthreats = find_odd_threats(board)
+    threat_combinations = find_threat_combinations(board)
+
+    print("Odd threats:", oddthreats)
+    print("Threat combinations:", threat_combinations)
+
+
 
 
 # ----------- TESTING ----------- #
@@ -239,4 +251,4 @@ if __name__ == "__main__":
 
     solutions, groups = find_all_solutions(test_diagram, "X")
     print(len(solutions), len(groups))
-    #
+    find_all_win_conditions(test_diagram)
