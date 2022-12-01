@@ -194,18 +194,55 @@ def from_before(board, before, square_to_groups):
         return {"squares": squares, "groups": threats, "rule": "before"}
 
 
-def find_all_win_conditions(board):
+def find_all_win_conditions(board, player):
     """Returns all win conditions for the opponent can employ on the board.
     Returns:
         List of solutions that are win conditions.
     """
-    oddthreats = find_odd_threats(board)
-    threat_combinations = find_threat_combinations(board)
+    odd_threats = find_odd_threats(board)
+    #threat_combinations = find_threat_combinations(board) # To be fixed
 
-    print("Odd threats:", oddthreats)
-    print("Threat combinations:", threat_combinations)
+    solutions = []
+    square_to_groups = find_square_to_groups(board, player)
+    for odd_threat in odd_threats:
+        solution = from_odd_threat(board, odd_threat, square_to_groups)
+        solutions.append(solution)
+    
+    return solutions
 
 
+def from_odd_threat(board, odd_threat, square_to_groups):
+    """Converts an odd threat into a Solution.
+    Returns:
+        solution = {"squares": ((square1, square2)), "groups": [(square1, square2, square3, square4)], "rule": rule}
+    """
+    groups_solved = []
+    
+    # Find playable square from the group, if any.
+    playable_squares = possible_actions(board)
+    playable_group_square = None
+    for square in odd_threat["group"]:
+        if square in playable_squares:
+            playable_group_square = square_to_groups[square]
+    # Find the empty square from the group
+    empty_group_square = None
+    for square in odd_threat["group"]:
+        if board[square[0]][square[1]] == ".":
+            empty_group_square = square
+    # Add Groups containing any odd Square up to the Odd Threat that are not directly playable.
+    if playable_group_square:
+        for row in range(odd_threat["empty_odd_square"][0], odd_threat["directly_playable"][0], 2):
+            square = (row, odd_threat["empty_odd_square"][1])
+            groups_solved.append(square)
+
+    # Add Groups containing suares above the odd threat
+    for row in range(5, odd_threat["empty_odd_square"][0], 1):
+        square = (row, odd_threat["empty_odd_square"][1])
+        groups_solved.append(square)
+    
+    return {"squares": [odd_threat["empty_odd_square"]], "groups": groups_solved, "rule": "odd_threat"}
+
+#            return {"squares": (square1, square2), "groups": groups_intersection, "rule": "odd_threat"}
 
 
 # ----------- TESTING ----------- #
@@ -242,13 +279,23 @@ if __name__ == "__main__":
         [".", ".", "O", ".", ".", ".", "."], 
         [".", ".", "X", "O", ".", ".", "."], 
         [".", ".", "X", "X", "O", ".", "."]])
+    
+    diagram8_1 = board_flip([
+        [".", ".", ".", ".", ".", ".", "."], 
+        [".", ".", ".", ".", ".", ".", "."], 
+        [".", ".", ".", "O", "X", ".", "."], 
+        [".", "X", "X", "X", "O", ".", "."], 
+        [".", "X", "O", "O", "O", ".", "."], 
+        ["X", "O", "X", "X", "O", ".", "."]])
 
-    test_diagram = diagram6_10
-
+    test_diagram = diagram8_1
+    player = "X"
     print("Board:")
     for row in board_flip(test_diagram):
         print(row)
 
     solutions, groups = find_all_solutions(test_diagram, "X")
-    print(len(solutions), len(groups))
-    find_all_win_conditions(test_diagram)
+    print("rules solutions", len(solutions), len(groups))
+    win_solutions = find_all_win_conditions(test_diagram, player)
+    print("threats solutions", len(win_solutions))
+    print("win_solutions", win_solutions)

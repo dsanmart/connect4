@@ -313,6 +313,9 @@ def find_special_befores(board, befores):
 
 # ----------- WINNER RULES ----------- #
 def find_odd_threats(board):
+    """Returns all the odd threats on a board.
+    odd_threat = {"group": (square1, square2, square3, square4), "empty_odd_square": empty_square, "directly_playable": playable_square}
+    """
     playable_actions = possible_actions(board)
     
     odd_threats = []
