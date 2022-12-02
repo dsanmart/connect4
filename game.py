@@ -103,8 +103,6 @@ def game_loop(solver, GameClass, game_type, multi_player = False, id = None):
       #print('Next move: %s' % next_move)
       #print("new board: ", new_board)
       update_result = update_game(game_type, id, player, json.dumps(next_move))
-
-      print("You can still surrender 	(˵ ͡° ͜ʖ ͡°˵)")
     else:
       time.sleep(2)
 

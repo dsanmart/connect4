@@ -1,14 +1,12 @@
 from copy import deepcopy
-  
-
-
+from utils import find_strong_threat
 
 # ----------- HELPER FUNCTIONS ----------- #
 def board_flip(board):
     """Returns a new board with the board flipped vertically.
     This allows accessing the lower row as the first item in the list."""
-
-    new_board = deepcopy(board)
+    new_board =deepcopy(board)
+    #print((list(new_board)))
     new_board.reverse()
     return new_board
 
@@ -30,6 +28,7 @@ def check_win(board, player):
         if player*4 in "".join(col):
             return True
 
+    
     #check diagonals
     for i in range(3):
         for j in range(4):
@@ -40,9 +39,12 @@ def check_win(board, player):
         for j in range(3,7):
             if board[i][j]==player and board[i+1][j-1]==player and board[i+2][j-2]==player and board[i+3][j-3]==player:
                 return True
+                
+    
+  
     return False
 
-def possible_actions(board):
+def possible_actions(board):# board_flip(board)
     """Returns a list of all directly playable actions (row, col) on a board."""
     actions = []
     for col in range(len(board[0])):
@@ -51,7 +53,7 @@ def possible_actions(board):
                 actions.append((row,col))
                 break
     # playable_cols = [x[1] for x in actions]
-    return actions
+    return actions # [(0,1), (1,2)....]
 
 def fill_possible_actions(board, possible_actions, player):
     """Returns a new board with the possible actions filled in.
@@ -68,6 +70,13 @@ def fill_possible_actions(board, possible_actions, player):
         boards.append(new_board)
     return boards
 
+def other_player(player):
+  if player == "X":
+    other_player = "O"
+  else:
+    other_player = "X"
+  return other_player
+
 
 # ----------- MINIMAX ----------- #
 
@@ -76,22 +85,27 @@ def heuristic(board, player):
         oppponent = "O"
     else:
         oppponent = "X"
-    if check_win(board, player):
-        return 100
-    elif check_win(board, oppponent):
-        return -100
-    else:
-        return 0
+    score = 0
+    if check_win(board, player): # If the player wins, return a high score
+        score += 40
+    if check_win(board, oppponent): # if the opponent wins, the score is -100
+        score -= 40
+    if find_strong_threat(board, oppponent):
+        score -= 17
+    if find_strong_threat(board, player):
+        score += 17
 
-def minimax(board, player, tree_depth, alpha, beta):
+    return score
+
+def minimax(board, player,is_maximizing, tree_depth, alpha, beta):
     if tree_depth == 0 or is_end(board):
         return heuristic(board, player), board
 
-    if player == "X":
+    if is_maximizing:
         max_score = -1000
         best_move = None
-        for move in fill_possible_actions(board, possible_actions(board), "X"):
-            score = minimax(move, player, tree_depth-1, alpha, beta)[0] # To reduce memory usage we only get the score [0] when calling this recursive function (not the best_move)
+        for move in fill_possible_actions(board, possible_actions(board), player):
+            score = minimax(move, player,False, tree_depth-1, alpha, beta)[0] # To reduce memory usage we only get the score [0] when calling this recursive function (not the best_move)
             max_score = max(max_score, score)
             if max_score == score:
                 best_move = move
@@ -102,8 +116,8 @@ def minimax(board, player, tree_depth, alpha, beta):
     else:
         min_score = 1000
         best_move = None
-        for move in fill_possible_actions(board, possible_actions(board), "O"):
-            score = minimax(move, player, tree_depth - 1, alpha, beta)[0] # To reduce memory usage we only get the score [0] when calling this recursive function (not the best_move)
+        for move in fill_possible_actions(board, possible_actions(board), other_player(player)):
+            score = minimax(move,other_player(player) ,True, tree_depth - 1, alpha, beta)[0] # To reduce memory usage we only get the score [0] when calling this recursive function (not the best_move)
             min_score = max(min_score, score)
             if min_score == score:
                 best_move = move
@@ -112,51 +126,3 @@ def minimax(board, player, tree_depth, alpha, beta):
                 break
         return min_score, best_move
 
-
-
-# ----------- TESTING ----------- #
-initial_board = board_flip([
-    [".", ".", ".", ".", ".", ".", "."], 
-    [".", ".", ".", ".", ".", ".", "."], 
-    [".", ".", ".", ".", ".", ".", "."], 
-    [".", ".", ".", ".", ".", ".", "."], 
-    [".", ".", ".", ".", ".", ".", "."], 
-    [".", ".", ".", ".", ".", ".", "."]])
-
-diagram6_1 = board_flip([
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", ".", "O", ".", ".", "."], 
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", ".", "O", ".", ".", "."], 
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", "X", "O", "O", ".", "."]])
-
-complete_board = board_flip([
-    ["X", "X", "X", "X", "X", "X", "X"], 
-    [".", ".", ".", "O", ".", ".", "."], 
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", ".", "O", ".", ".", "."], 
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", "X", "O", "O", ".", "."]])
-
-diagram_win = board_flip([
-    [".", ".", ".", "X", ".", ".", "."], 
-    [".", ".", ".", "O", ".", ".", "."], 
-    [".", ".", ".", "X", ".", ".", "O"], 
-    [".", ".", ".", "O", ".", "X", "O"], 
-    [".", ".", ".", "X", "O", "X", "O"], 
-    [".", ".", "X", "O", "O", "X", "X"]])
-
-
-test_diagram = diagram6_1
-
-print("Initial Board:")
-for row in board_flip(test_diagram):
-    print(row)
-
-next_move_score, next_move_board = minimax(test_diagram, "X", 7, -1000, 1000)
-
-print("Next Move:")
-print("Score", next_move_score)
-for row in board_flip(next_move_board):
-    print(row)

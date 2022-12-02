@@ -16,10 +16,10 @@ def find_chosen_set(node_graph, problems, disallowed_solutions, used_solutions, 
     """
     # If there are no more Problems, we have found a set of Solutions.
     if len(problems) == 0:
-        print("Eureka!")
+        #print("Eureka!")
         return used_solutions.copy()
     if len(problems) <= num_not_solutions:
-        print("Eureka2!")
+        #print("Eureka2!")
         return used_solutions.copy()
     #print("Problems", len(problems))
     # Recursive case

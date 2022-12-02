@@ -118,12 +118,29 @@ def find_strong_threat(board, player):
         for square in threat:
             if board[square[0]][square[1]] == player:
                 tokens += 1
-            if board[square[0]][square[1]] == '.' and board[square[0]][square[1]] in playable_actions:
+            if board[square[0]][square[1]] == '.' and square in playable_actions:
                 empty_squares += 1
         if tokens == 3 and empty_squares == 1:
             return True
 
     return False
+
+def stop_threat(board, player):
+    # Finds threats with 3 of the player's pieces and 1 empty space
+    opponent_threats = find_threats(board, player)
+    playable_actions = possible_actions(board)
+    for threat in opponent_threats:
+        tokens = 0
+        empty_squares = 0
+        for square in threat:
+            if board[square[0]][square[1]] == player:
+                tokens += 1
+            if board[square[0]][square[1]] == '.' and square in playable_actions:
+                empty_squares += 1
+                empty_square = square
+        if tokens == 3 and empty_squares == 1:
+            return empty_square
+    return None
 
 # ----------- HELPER FUNCTIONS FOR EVALUATION FUNCTION ----------- #
 def node_with_least_number_of_neighbors(node_graph, problems, disallowed_solutions):
