@@ -1,5 +1,5 @@
 from victor import evaluate
-from utils import board_flip, compare, compare2
+from utils import board_flip, compare, compare2, find_strong_threat
 from minimax2 import minimax
 
 initial_board = board_flip([
@@ -12,15 +12,16 @@ initial_board = board_flip([
 
 def play(previous_board, board, player):
     board = board_flip(board)
+    previous_board = board_flip(previous_board)
     if board == initial_board:
         return 3
-    solutions = evaluate(board, player)
+    solutions = evaluate(previous_board, player)
     if len(solutions) == 0: # If victor is sleeping, play minimax
         _, next_move_board = minimax(board, player, True, 8, -1000, 1000)
         return compare(board,next_move_board)
     else: # If victor is awake, play victor
         square_to_play = {}
-        print("Solutions", len(solutions))
+        #print("Solutions", len(solutions))
         for solution in solutions:
             if solution["rule"] == "before":
                 square_to_play = before_plays(solution, square_to_play)
@@ -34,11 +35,21 @@ def play(previous_board, board, player):
             if solution["rule"] == "baseinverse":
                 square_to_play = baseinverse_plays(solution, square_to_play)
         
-        opponent_move = compare2(previous_board, board)
-        if opponent_move in square_to_play:
+        opponent_move = compare2(previous_board, board, player)
+        #print("Opponent move", opponent_move)
+        if player == 'X':
+            opponent = 'O'
+        else:
+            opponent = 'X'
+        if find_strong_threat(board, player) or find_strong_threat(board, opponent):
+            print("Victor lets minimax handle strong threat")
+            _, next_move_board = minimax(board, player, True, 8, -1000, 1000)
+            return compare(board,next_move_board)
+        elif opponent_move in square_to_play.keys():
             print("Victor plays", square_to_play[opponent_move][1])
             return square_to_play[opponent_move][1]
         else:
+            print("Victor sleeps", opponent_move)
             _, next_move_board = minimax(board, player, True, 8, -1000, 1000)
             return compare(board,next_move_board)
 

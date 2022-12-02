@@ -82,8 +82,10 @@ def game_loop(solver, GameClass, game_type, multi_player = False, id = None):
   player1 = game.player
   while True:
     previous_board = game.get_board()
+    #print("previous board") 
+    #print(previous_board)
     game = game_state(game_type, id, GameClass)
-    new_board = game.get_board()
+    
     game.print_game()
     if game.is_end():
       if game.player == '-':
@@ -92,12 +94,16 @@ def game_loop(solver, GameClass, game_type, multi_player = False, id = None):
         print('winner' if game.player == player else 'loser')
       return
     if game.player == player:
+      new_board = game.get_board()
+      #print("new board")
+      #print(new_board)
       print('Making next move...')
       next_move = play(previous_board, new_board, player)
-
+      #print("previous board: ", previous_board)      
+      #print('Next move: %s' % next_move)
+      #print("new board: ", new_board)
       update_result = update_game(game_type, id, player, json.dumps(next_move))
-      print("previous board: ", previous_board)
-      print("new board: ", new_board)
+
       print("You can still surrender 	(˵ ͡° ͜ʖ ͡°˵)")
     else:
       time.sleep(2)

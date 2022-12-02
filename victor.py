@@ -70,7 +70,7 @@ def evaluate(board, player):
     
     if player == "O":
         node_graph = create_node_graph(all_solutions)
-        print(len(node_graph), len(all_solutions))
+        #print(len(node_graph), len(all_solutions))
         return find_chosen_set(
              node_graph=node_graph,
              problems=player_groups,
@@ -78,8 +78,8 @@ def evaluate(board, player):
              used_solutions=[],
              num_not_solutions=len(player_groups)-len(solved_groups))
     else:
-        print("Solved threats", len(solved_groups))
-        print("Number of threats", len(player_groups))
+        #print("Solved threats", len(solved_groups))
+        #print("Number of threats", len(player_groups))
         node_graph = create_node_graph(all_solutions)
         #print(len(node_graph), len(all_solutions))
         return find_chosen_set(

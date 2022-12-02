@@ -1,4 +1,5 @@
 from copy import deepcopy
+from utils import find_strong_threat
 
 # ----------- HELPER FUNCTIONS ----------- #
 def board_flip(board):
@@ -84,12 +85,19 @@ def heuristic(board, player):
         oppponent = "O"
     else:
         oppponent = "X"
-    if check_win(board, player):
-        return 100
-    elif check_win(board, oppponent):
-        return -100
-    else:
-        return 0
+    score = 0
+    if check_win(board, player): # If the player wins, return a high score
+        score += 40
+    if check_win(board, oppponent): # if the opponent wins, the score is -100
+        score -= 40
+    if find_strong_threat(board, oppponent):
+        score -= 17
+    if find_strong_threat(board, player):
+        score += 17
+
+    return score
+
+
 #MINIMAX
 
 def minimax(board, player,is_maximizing, tree_depth, alpha, beta):

@@ -102,9 +102,10 @@ def from_claimeven(claimeven, square_to_groups):
     rule="claimeven"
     upper_square = (claimeven[0]+1, claimeven[1])
     lower_square = claimeven
-    groups = square_to_groups[upper_square] # Find threats on the upper square
-    if groups: # Must solve a group in order to be converted into a solution
-        return {"squares": ((upper_square, lower_square)), "groups": groups, "rule":rule}
+    if upper_square in square_to_groups:
+        groups = square_to_groups[upper_square] # Find threats on the upper square
+        if groups: # Must solve a group in order to be converted into a solution
+            return {"squares": ((upper_square, lower_square)), "groups": groups, "rule":rule}
 
 def from_baseinverse(baseinverse, square_to_groups):
     """Converts a Baseinverse into a Solution if there is one.
