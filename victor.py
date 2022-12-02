@@ -4,7 +4,7 @@ from combination import combination_allowed
 from solution import find_all_solutions, find_all_win_conditions
 
 
-def find_chosen_set(node_graph, problems, disallowed_solutions, used_solutions):
+def find_chosen_set(node_graph, problems, disallowed_solutions, used_solutions, num_not_solutions):
     """Finds a set of Solutions that solves all Problems.
     Args:
         node_graph: a Dictionary of groups or Solutions to all Solutions they are connected to.
@@ -15,20 +15,24 @@ def find_chosen_set(node_graph, problems, disallowed_solutions, used_solutions):
         chosen_set: a set of Solutions that solves all Problems, if it exists...
     """
     # If there are no more Problems, we have found a set of Solutions.
-    if len(problems) == 1:
-        print("Found a set of Solutions")
-        return used_solutions
-    print("Problems", problems)
+    if len(problems) == 0:
+        print("Eureka!")
+        return used_solutions.copy()
+    if len(problems) <= num_not_solutions:
+        print("Eureka2!")
+        return used_solutions.copy()
+    #print("Problems", len(problems))
     # Recursive case
+    #print(len(problems), num_not_solutions)
     most_difficult_node = node_with_least_number_of_neighbors(node_graph, problems, disallowed_solutions)
     most_difficult_node_usable_solutions = node_graph[most_difficult_node]
     for solution in disallowed_solutions:
         if solution in most_difficult_node_usable_solutions:
             most_difficult_node_usable_solutions.remove(solution)
     
-    print("Most difficult node", most_difficult_node_usable_solutions)
     for solution in most_difficult_node_usable_solutions:
         # Choose
+        #print(solution["rule"])
         used_solutions.append(solution)
         hashable_solution = (solution["rule"], tuple(solution["groups"]), tuple(solution["squares"]))
         # New disallowed solutions
@@ -45,16 +49,15 @@ def find_chosen_set(node_graph, problems, disallowed_solutions, used_solutions):
             node_graph,
             problems,
             new_disallowed_solutions,
-            used_solutions)
+            used_solutions,
+            num_not_solutions)
         
+        #print("backtrack")
+        # Unchoose with backtracking
         used_solutions.remove(solution)
 
         if chosen_set is not None:
             return chosen_set
-        else:
-            print("???", problems)
-
-    print("Most constrained", most_difficult_node_usable_solutions)
 
 
 
@@ -66,29 +69,25 @@ def evaluate(board, player):
     solved_groups = [group for group in group_to_solutions]
     
     if player == "O":
-        win_conditions = find_all_win_conditions(board, player)
-
-        # Since creating the Node Graph is expensive, we don't create it if we know there's no chance of success.
-        # If there are no win conditions, White cannot guarantee a win.
-        if not win_conditions:
-            return None
-        print("Win conditions: {}".format(win_conditions))
-        solution_to_solutions = {}
-        for win_condition in win_conditions:
-            # If there is a single Problem that has no Solution, don't consider this win_condition.
-            # Note that we don't combine Problems from different win conditions since win conditions cannot be combined.
-            if solved_groups.union(win_condition.groups) != player_groups:
-                continue
-    else:
-        print("Solved threats", len(solved_groups))
-        print("Number of threats", len(player_groups))
         node_graph = create_node_graph(all_solutions)
         print(len(node_graph), len(all_solutions))
         return find_chosen_set(
              node_graph=node_graph,
              problems=player_groups,
              disallowed_solutions=[],
-             used_solutions=[])
+             used_solutions=[],
+             num_not_solutions=len(player_groups)-len(solved_groups))
+    else:
+        print("Solved threats", len(solved_groups))
+        print("Number of threats", len(player_groups))
+        node_graph = create_node_graph(all_solutions)
+        #print(len(node_graph), len(all_solutions))
+        return find_chosen_set(
+             node_graph=node_graph,
+             problems=player_groups,
+             disallowed_solutions=[],
+             used_solutions=[],
+             num_not_solutions=len(player_groups)-len(solved_groups))
 
 
 def create_node_graph(solutions):
@@ -166,9 +165,10 @@ if __name__ == "__main__":
         ["X", "O", "X", "X", "O", ".", "."]])
 
     test_diagram = diagram8_1
-    player = "X"
+    player = "O"
     print("Board:")
     for row in board_flip(test_diagram):
         print(row)
-
-    print("Evaluation:", evaluate(test_diagram, player))
+    evaluated_solutions = evaluate(test_diagram, player)
+    print("Solutions:", evaluated_solutions)
+    print("Solutions:", len(evaluated_solutions))

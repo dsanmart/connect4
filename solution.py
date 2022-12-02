@@ -14,12 +14,12 @@ def find_all_solutions(board, player):
     claimevens = find_claimevens(board)
     baseinverses = find_baseinverses(board)
     verticals = find_verticals(board)
-    afterevens = find_after_evens(board, player)
-    low_inverses = find_low_inverses(verticals)
-    high_inverses = find_high_inverses(board)
-    baseclaims = find_base_claims(board)
+    #afterevens = find_after_evens(board, player)
+    #low_inverses = find_low_inverses(verticals)
+    #high_inverses = find_high_inverses(board)
+    #baseclaims = find_base_claims(board)
     befores = find_befores(board)
-    special_befores = find_special_befores(board, befores)
+    #special_befores = find_special_befores(board, befores)
 
     # Dictionary with all squares from the board with the threats from the current player that they belong to.
     square_to_groups = find_square_to_groups(board, player)
@@ -145,6 +145,8 @@ def from_before(board, before, square_to_groups):
         before: {"group": (square1, square2, square3, square4), 
             "verticals": [((upper_row, upper_col), (lower_row, lower_col)), ...], 
             "claimeven": [((upper_row, upper_col), (lower_row, lower_col)), ...]}
+    Return 
+    {"squares": (empty_square_sucessor, empty_square_sucessor, empty_square_sucessor, upper, lower, upper, lower,...), "groups": threats, "rule": "before"}
     """
     # Find all empty square in the before group
     empty_squares_of_before = []
@@ -171,22 +173,26 @@ def from_before(board, before, square_to_groups):
     if threats:
         squares = empty_squares_of_before
 
+        verticals = []
         for vertical in before["verticals"]:
-            squares.append(vertical[0]) # Add upper square of vertical
-            squares.append(vertical[1]) # Add lower square of vertical
+            #squares.append(vertical[0]) # Add upper square of vertical
+            #squares.append(vertical[1]) # Add lower square of vertical
+            verticals.append(vertical)
             vertical_solution = from_vertical(vertical[1], square_to_groups)
             if vertical_solution:
                 set(threats).update(vertical_solution["groups"])
         
+        claimevens = []
         for claimeven in before["claimevens"]:
-            squares.append(claimeven[0]) # Add upper square of claimeven
-            squares.append(claimeven[1]) # Add lower square of claimeven
+            #squares.append(claimeven[0]) # Add upper square of claimeven
+            #squares.append(claimeven[1]) # Add lower square of claimeven
+            claimevens.append(claimeven)
             claimeven_solution = from_claimeven(claimeven[1], square_to_groups)
             if claimeven_solution:
                 set(threats).update(claimeven_solution["groups"])
 
 
-        return {"squares": squares, "groups": threats, "rule": "before"}
+        return {"squares": squares, "verticals": verticals, "claimevens": claimevens, "groups": threats, "rule": "before"}
 
 
 

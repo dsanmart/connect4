@@ -146,3 +146,16 @@ def cols_to_squares(squares):
             col_to_squares_dict[square[1]] = set()
         col_to_squares_dict[square[1]].add(square)
     return col_to_squares_dict
+
+def compare( board, new_board):
+  for i in range(len(board)):
+    for j in range(len(board[0])):
+      if board[i][j] != new_board[i][j]:
+        return j
+
+
+def compare2( board, new_board):
+  for i in range(len(board)):
+    for j in range(len(board[0])):
+      if board[i][j] != new_board[i][j]:
+        return (i, j)

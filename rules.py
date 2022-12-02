@@ -177,7 +177,7 @@ def is_true_befores(board, threat):
 
 def add_before_variations(board, group, empty_squares, verticals, claimevens):
     """Adds all Before variations with group as the Before group to befores.
-    This is a Recursive Backtracking algorithm.    """
+    This is a Recursive Backtracking algorithm."""
     # Base Case.
 
     if len(empty_squares) == 0:
@@ -510,15 +510,15 @@ if __name__ == "__main__":
     threat_combinations = find_threat_combinations(test_diagram)
     end = time.time()
 
-#    print("Seconds taken: ", end - start)
-#    print("Claimevens: ", claimevens)
-#    print("Baseinverses: ", baseinverses)
-#    print("Verticals: ", verticals)
-#    print("Low_inverses: ", low_inverses)
-#    print("High_inverses: ", high_inverses)
-#    print("Afterevens: ", afterevens)
-#    print("Baseclaims: ", baseclaims)
-#    print("Befores: ", befores)
-#    print("Special_befores: ", special_befores)
+    print("Seconds taken: ", end - start)
+    print("Claimevens: ", claimevens)
+    print("Baseinverses: ", baseinverses)
+    print("Verticals: ", verticals)
+    print("Low_inverses: ", low_inverses)
+    print("High_inverses: ", high_inverses)
+    print("Afterevens: ", afterevens)
+    print("Baseclaims: ", baseclaims)
+    print("Befores: ", befores)
+    print("Special_befores: ", special_befores)
     print("Odd_threats: ", odd_threats)
     print("Threat_combinations: ", threat_combinations)
